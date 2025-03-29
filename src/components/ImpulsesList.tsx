@@ -22,7 +22,9 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { ImpulseEntry } from "../types/types";
 import { getTodaysDate } from "../utils/dateUtils";
 import { useTranslation } from "../utils/i18n";
-import { db } from "../firebase/config";
+import { db, firebaseConfig } from "../firebase/config";
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 
 interface ImpulsesListProps {
   redirections: ImpulseEntry[];
@@ -31,7 +33,8 @@ interface ImpulsesListProps {
 const ImpulsesList: React.FC<ImpulsesListProps> = ({ redirections }) => {
   const theme = useTheme();
   const { t } = useTranslation();
-
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
   // Filter today's impulses
   const todaysImpulses = redirections.filter(
     (impulse) => impulse.date === getTodaysDate()
