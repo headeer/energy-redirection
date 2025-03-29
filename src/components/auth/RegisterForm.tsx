@@ -9,11 +9,14 @@ import {
   IconButton,
   Alert,
   Link as MuiLink,
+  Container,
+  Paper,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
 import { registerUser } from "../../firebase/auth";
 import { useTranslation } from "../../utils/i18n";
+import { NeuroPulseLogo } from "../common/NeuroPulseLogo";
 
 interface RegisterFormProps {
   onSuccess?: () => void;
@@ -68,164 +71,255 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
     return (
       <Box
         sx={{
+          minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
-          gap: 2.5,
-          width: "100%",
-          maxWidth: 400,
-          mx: "auto",
-          p: 3,
-          borderRadius: 2,
-          boxShadow: 3,
-          bgcolor: "background.paper",
-          textAlign: "center",
+          justifyContent: "center",
+          alignItems: "center",
+          py: 4,
         }}
       >
-        <Typography variant="h5" component="h1" gutterBottom>
-          {t("verifyEmail")}
-        </Typography>
+        <Container maxWidth="sm">
+          <Paper
+            elevation={10}
+            sx={{
+              p: 4,
+              borderRadius: 3,
+              textAlign: "center",
+              overflow: "hidden",
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                mb: 3,
+              }}
+            >
+              <NeuroPulseLogo
+                sx={{
+                  fontSize: 60,
+                  color: "primary.main",
+                  mb: 2,
+                }}
+              />
+            </Box>
 
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {t("verifyEmailSent")}
-        </Alert>
+            <Typography variant="h5" component="h1" gutterBottom>
+              {t("verifyEmail")}
+            </Typography>
 
-        <Typography variant="body1" paragraph>
-          {t("clickLinkInEmail")}
-        </Typography>
+            <Alert severity="success" sx={{ mb: 3 }}>
+              {t("verifyEmailSent")}
+            </Alert>
 
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => navigate("/login")}
-          sx={{ mt: 2 }}
-        >
-          {t("backToLogin")}
-        </Button>
+            <Typography variant="body1" paragraph>
+              {t("clickLinkInEmail")}
+            </Typography>
+
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => navigate("/login")}
+              sx={{
+                mt: 2,
+                background: "linear-gradient(45deg, #6a0dad 0%, #00d4ff 100%)",
+                "&:hover": {
+                  background:
+                    "linear-gradient(45deg, #5a0c8d 0%, #00bfe6 100%)",
+                },
+              }}
+            >
+              {t("backToLogin")}
+            </Button>
+          </Paper>
+        </Container>
       </Box>
     );
   }
 
   return (
     <Box
-      component="form"
-      onSubmit={handleSubmit}
       sx={{
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        gap: 2.5,
-        width: "100%",
-        maxWidth: 400,
-        mx: "auto",
-        p: 3,
-        borderRadius: 2,
-        boxShadow: 3,
-        bgcolor: "background.paper",
+        justifyContent: "center",
+        alignItems: "center",
+        py: 4,
       }}
     >
-      <Typography variant="h5" component="h1" textAlign="center" gutterBottom>
-        {t("register")}
-      </Typography>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      <TextField
-        label={t("displayName")}
-        type="text"
-        value={displayName}
-        onChange={(e) => setDisplayName(e.target.value)}
-        fullWidth
-        autoFocus
-      />
-
-      <TextField
-        label={t("email")}
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        fullWidth
-        required
-        autoComplete="email"
-      />
-
-      <TextField
-        label={t("password")}
-        type={showPassword ? "text" : "password"}
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        fullWidth
-        required
-        autoComplete="new-password"
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton
-                onClick={handleTogglePasswordVisibility}
-                edge="end"
-                aria-label={showPassword ? "hide password" : "show password"}
-              >
-                {showPassword ? <VisibilityOff /> : <Visibility />}
-              </IconButton>
-            </InputAdornment>
-          ),
-        }}
-      />
-
-      <TextField
-        label={t("confirmPassword")}
-        type={showConfirmPassword ? "text" : "password"}
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-        fullWidth
-        required
-        autoComplete="new-password"
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton
-                onClick={handleToggleConfirmPasswordVisibility}
-                edge="end"
-                aria-label={
-                  showConfirmPassword
-                    ? "hide confirm password"
-                    : "show confirm password"
-                }
-              >
-                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-              </IconButton>
-            </InputAdornment>
-          ),
-        }}
-      />
-
-      <Box sx={{ textAlign: "right", mt: 1 }}>
-        <MuiLink
-          component={Link}
-          to="/login"
-          variant="body2"
-          sx={{ textDecoration: "none" }}
+      <Container maxWidth="sm">
+        <Paper
+          elevation={10}
+          sx={{
+            borderRadius: 3,
+            overflow: "hidden",
+          }}
         >
-          {t("alreadyHaveAccount")}
-        </MuiLink>
-      </Box>
+          <Box
+            sx={{
+              p: 3,
+              background: "linear-gradient(135deg, #6a0dad 0%, #00d4ff 100%)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <NeuroPulseLogo
+              sx={{
+                fontSize: 70,
+                color: "white",
+                mb: 2,
+              }}
+            />
+            <Typography
+              variant="h4"
+              component="h1"
+              color="white"
+              fontWeight="bold"
+              sx={{
+                backgroundImage:
+                  "linear-gradient(45deg, #ffffff 0%, #f0f0f0 100%)",
+                backgroundClip: "text",
+                textFillColor: "transparent",
+                mb: 0,
+              }}
+            >
+              NeuroPulse
+            </Typography>
+          </Box>
 
-      <Button
-        type="submit"
-        variant="contained"
-        size="large"
-        fullWidth
-        disabled={loading}
-        sx={{
-          mt: 2,
-          height: 48,
-          borderRadius: 2,
-        }}
-      >
-        {loading ? <CircularProgress size={24} /> : t("register")}
-      </Button>
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2.5,
+              p: 4,
+            }}
+          >
+            <Typography
+              variant="h5"
+              component="h2"
+              textAlign="center"
+              gutterBottom
+            >
+              {t("register")}
+            </Typography>
+
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+
+            <TextField
+              label={t("displayName")}
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              fullWidth
+              autoFocus
+            />
+
+            <TextField
+              label={t("email")}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              fullWidth
+              required
+              autoComplete="email"
+            />
+
+            <TextField
+              label={t("password")}
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              fullWidth
+              required
+              autoComplete="new-password"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleTogglePasswordVisibility}
+                      edge="end"
+                      aria-label={
+                        showPassword ? "hide password" : "show password"
+                      }
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <TextField
+              label={t("confirmPassword")}
+              type={showConfirmPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              fullWidth
+              required
+              autoComplete="new-password"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleToggleConfirmPasswordVisibility}
+                      edge="end"
+                      aria-label={
+                        showConfirmPassword
+                          ? "hide confirm password"
+                          : "show confirm password"
+                      }
+                    >
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <Box sx={{ textAlign: "right", mt: 1 }}>
+              <MuiLink
+                component={Link}
+                to="/login"
+                variant="body2"
+                sx={{ textDecoration: "none" }}
+              >
+                {t("alreadyHaveAccount")}
+              </MuiLink>
+            </Box>
+
+            <Button
+              type="submit"
+              variant="contained"
+              size="large"
+              fullWidth
+              disabled={loading}
+              sx={{
+                mt: 2,
+                height: 48,
+                borderRadius: 2,
+                background: "linear-gradient(45deg, #6a0dad 0%, #00d4ff 100%)",
+                "&:hover": {
+                  background:
+                    "linear-gradient(45deg, #5a0c8d 0%, #00bfe6 100%)",
+                },
+              }}
+            >
+              {loading ? <CircularProgress size={24} /> : t("register")}
+            </Button>
+          </Box>
+        </Paper>
+      </Container>
     </Box>
   );
 };

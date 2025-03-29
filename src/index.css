@@ -5,7 +5,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
-  background-color: #f8f9fb;
+  background: linear-gradient(135deg, #6a0dad20 0%, #00d4ff20 100%) fixed;
+  min-height: 100vh;
 }
 
 * {
@@ -19,6 +20,7 @@ code {
 
 html {
   scroll-behavior: smooth;
+  height: 100%;
 }
 
 #root {
