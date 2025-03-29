@@ -26,16 +26,20 @@ import { useTranslation } from "../utils/i18n";
 import AnimatedCheckbox from "./AnimatedCheckbox";
 
 interface ImpulseFormProps {
+  open: boolean;
+  onClose: () => void;
   onAddImpulse: (impulse: ImpulseEntry) => void;
-  todaysCount: number;
+  todaysCount?: number;
   onCategoryChange?: (
     category: "Poszukiwacz" | "Kochanek" | "Zdobywca"
   ) => void;
 }
 
 const ImpulseForm: React.FC<ImpulseFormProps> = ({
+  open,
+  onClose,
   onAddImpulse,
-  todaysCount,
+  todaysCount = 0,
   onCategoryChange,
 }) => {
   const theme = useTheme();

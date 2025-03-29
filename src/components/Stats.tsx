@@ -17,12 +17,13 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import StarIcon from "@mui/icons-material/Star";
 import EditIcon from "@mui/icons-material/Edit";
 import { useTranslation } from "../utils/i18n";
-import { RewardSettings, RewardType } from "../types/types";
+import { RewardSettings, RewardType, ImpulseEntry } from "../types/types";
 import EditRewardsDialog from "./EditRewardsDialog";
 
 interface StatsProps {
   totalRedirections: number;
-  onClaimReward: (rewardType: RewardType) => void;
+  redirections: ImpulseEntry[];
+  onClaimReward?: (rewardType: RewardType) => void;
 }
 
 // Default reward settings
@@ -44,7 +45,11 @@ const defaultRewardSettings: RewardSettings = {
   },
 };
 
-const Stats: React.FC<StatsProps> = ({ totalRedirections, onClaimReward }) => {
+const Stats: React.FC<StatsProps> = ({
+  totalRedirections,
+  redirections,
+  onClaimReward,
+}) => {
   const theme = useTheme();
   const { t } = useTranslation();
   const [isEditRewardsOpen, setIsEditRewardsOpen] = useState(false);
@@ -96,7 +101,7 @@ const Stats: React.FC<StatsProps> = ({ totalRedirections, onClaimReward }) => {
       (rewardType === "medium" && mediumRewardAchieved) ||
       (rewardType === "large" && largeRewardAchieved)
     ) {
-      onClaimReward(rewardType);
+      onClaimReward?.(rewardType);
     }
   };
 

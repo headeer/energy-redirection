@@ -24,15 +24,15 @@ import { getTodaysDate } from "../utils/dateUtils";
 import { useTranslation } from "../utils/i18n";
 
 interface ImpulsesListProps {
-  impulses: ImpulseEntry[];
+  redirections: ImpulseEntry[];
 }
 
-const ImpulsesList: React.FC<ImpulsesListProps> = ({ impulses }) => {
+const ImpulsesList: React.FC<ImpulsesListProps> = ({ redirections }) => {
   const theme = useTheme();
   const { t } = useTranslation();
 
   // Filter today's impulses
-  const todaysImpulses = impulses.filter(
+  const todaysImpulses = redirections.filter(
     (impulse) => impulse.date === getTodaysDate()
   );
 

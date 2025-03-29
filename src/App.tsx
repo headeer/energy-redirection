@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
 import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import {
   Container,
   Box,
   Tab,
@@ -7,7 +13,11 @@ import {
   Snackbar,
   Alert,
   IconButton,
+  Fab,
+  Grid,
+  Stack,
 } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { ImpulseEntry, RewardType } from "./types/types";
 import Header from "./components/Header";
@@ -16,19 +26,37 @@ import ImpulsesList from "./components/ImpulsesList";
 import Stats from "./components/Stats";
 import RedirectionSuggestions from "./components/RedirectionSuggestions";
 import { Settings } from "./components/Settings";
+import LoginForm from "./components/auth/LoginForm";
+import RegisterForm from "./components/auth/RegisterForm";
+import OnboardingFlow from "./components/onboarding/OnboardingFlow";
 import { AppProviders } from "./providers/AppProviders";
 import {
   loadRedirections,
   getTotalRedirections,
   addRedirection,
+  saveRedirections,
 } from "./utils/storage";
 import { getTodaysDate } from "./utils/dateUtils";
 import { useTranslation } from "./utils/i18n";
 import { useTheme } from "@mui/material/styles";
 import { alpha } from "@mui/material/styles";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { OnboardingProvider } from "./contexts/OnboardingContext";
+
+// Private Route component
+const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, status } = useAuth();
+
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
+
+  return user ? <>{children}</> : <Navigate to="/login" />;
+};
 
 function AppContent() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [redirections, setRedirections] = useState<ImpulseEntry[]>([]);
   const [totalRedirections, setTotalRedirections] = useState<number>(0);
   const [rewardSnackbarOpen, setRewardSnackbarOpen] = useState<boolean>(false);
@@ -42,15 +70,24 @@ function AppContent() {
 
   // Load data from local storage on component mount
   useEffect(() => {
-    const loadedRedirections = loadRedirections();
-    setRedirections(loadedRedirections);
+    if (!user) return;
 
-    // Only count redirected impulses for the total
-    const redirectedCount = loadedRedirections.filter(
-      (r) => r.redirected
-    ).length;
-    setTotalRedirections(redirectedCount);
-  }, []);
+    const storedData = loadRedirections(user.uid);
+    if (storedData) {
+      setRedirections(storedData.redirections || []);
+      setTotalRedirections(storedData.totalRedirections || 0);
+    }
+  }, [user]);
+
+  // Save data to localStorage when it changes
+  useEffect(() => {
+    if (!user) return;
+
+    saveRedirections(user.uid, {
+      redirections,
+      totalRedirections,
+    });
+  }, [redirections, totalRedirections, user]);
 
   // Get today's redirections count
   const getTodaysRedirectionsCount = () => {
@@ -59,7 +96,9 @@ function AppContent() {
 
   // Handle adding a new impulse
   const handleAddImpulse = (impulse: ImpulseEntry) => {
-    const newRedirections = addRedirection(impulse);
+    if (!user) return;
+
+    const newRedirections = addRedirection(user.uid, impulse);
     setRedirections(newRedirections);
 
     // Only update total if the impulse was redirected
@@ -70,25 +109,24 @@ function AppContent() {
 
   // Handle claiming a reward
   const handleClaimReward = (rewardType: RewardType) => {
-    // Reduce the total redirections when claiming a reward
     let rewardText = "";
 
     switch (rewardType) {
       case "small":
         setTotalRedirections((prev) => Math.max(0, prev - 5));
-        rewardText = t("rewards");
+        rewardText = t("smallReward");
         break;
       case "medium":
         setTotalRedirections((prev) => Math.max(0, prev - 25));
-        rewardText = t("rewards");
+        rewardText = t("mediumReward");
         break;
       case "large":
         setTotalRedirections((prev) => Math.max(0, prev - 100));
-        rewardText = t("rewards");
+        rewardText = t("largeReward");
         break;
     }
 
-    setRewardMessage(`${t("claimed")}: ${rewardText}! 🎉`);
+    setRewardMessage(rewardText);
     setRewardSnackbarOpen(true);
   };
 
@@ -118,153 +156,146 @@ function AppContent() {
     setSelectedCategory(category);
   };
 
+  if (!user) {
+    return (
+      <Container maxWidth="sm" sx={{ py: 4 }}>
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/register" element={<RegisterForm />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Container>
+    );
+  }
+
   return (
-    <>
-      <Box
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <Header>
+        <IconButton
+          color="inherit"
+          edge="end"
+          onClick={toggleSettings}
+          aria-label="settings"
+          sx={{ ml: 1 }}
+        >
+          <SettingsIcon />
+        </IconButton>
+      </Header>
+
+      <Container
+        maxWidth="lg"
         sx={{
-          minHeight: "100vh",
-          background:
-            theme.palette.mode === "light"
-              ? `
-              linear-gradient(120deg, ${alpha(
-                theme.palette.primary.light,
-                0.05
-              )} 0%, ${alpha(theme.palette.background.default, 0.7)} 100%),
-              url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='${encodeURIComponent(
-                theme.palette.primary.main
-              )}' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E")
-            `
-              : `
-              linear-gradient(120deg, ${alpha(
-                theme.palette.primary.dark,
-                0.15
-              )} 0%, ${alpha(theme.palette.background.default, 0.9)} 100%),
-              url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='${encodeURIComponent(
-                theme.palette.primary.light
-              )}' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E")
-            `,
-          backgroundAttachment: "fixed",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          py: 3,
         }}
       >
-        <Header>
-          <IconButton
-            color="inherit"
-            edge="end"
-            onClick={toggleSettings}
-            aria-label="settings"
-            sx={{ ml: 1 }}
-          >
-            <SettingsIcon />
-          </IconButton>
-        </Header>
-
-        <Container
-          maxWidth="lg"
-          sx={{
-            py: 4,
-            "& .MuiPaper-root": {
-              boxShadow:
-                theme.palette.mode === "dark"
-                  ? `0 8px 32px 0 ${alpha(theme.palette.common.black, 0.3)}`
-                  : `0 8px 32px 0 ${alpha(theme.palette.common.black, 0.1)}`,
-              backdropFilter: "blur(4px)",
-            },
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              gap: 3,
-            }}
-          >
-            {/* Left Column */}
-            <Box sx={{ width: { xs: "100%", md: "30%" } }}>
-              <Stats
-                totalRedirections={totalRedirections}
-                onClaimReward={handleClaimReward}
-              />
-
-              {/* Mobile tabs for switching between content */}
-              <Box sx={{ display: { xs: "block", md: "none" }, mb: 2 }}>
-                <Tabs
-                  value={tabValue}
-                  onChange={handleTabChange}
-                  variant="fullWidth"
-                  aria-label="content tabs"
-                >
-                  <Tab label={t("newImpulse")} />
-                  <Tab label={t("redirectionSuggestions")} />
-                </Tabs>
-                <Box sx={{ mt: 2, display: tabValue === 1 ? "block" : "none" }}>
-                  <RedirectionSuggestions selectedCategory={selectedCategory} />
-                </Box>
-              </Box>
-            </Box>
-
-            {/* Right Column */}
-            <Box sx={{ width: { xs: "100%", md: "70%" } }}>
+        <Routes>
+          <Route
+            path="/"
+            element={
               <Box
                 sx={{
-                  display: {
-                    xs: tabValue === 0 ? "block" : "none",
-                    md: "flex",
-                  },
-                  flexDirection: { md: "row" },
-                  gap: 3,
+                  display: "flex",
+                  flexDirection: { xs: "column", md: "row" },
+                  gap: { xs: 2, md: 3 },
+                  flex: 1,
                 }}
               >
-                {/* Main Content Area */}
-                <Box sx={{ width: { md: "60%" } }}>
-                  <ImpulseForm
-                    onAddImpulse={handleAddImpulse}
-                    todaysCount={getTodaysRedirectionsCount()}
-                    onCategoryChange={handleCategoryChange}
-                  />
-                  <ImpulsesList impulses={redirections} />
+                <Box sx={{ flex: 2, width: "100%" }}>
+                  <ImpulsesList redirections={redirections} />
                 </Box>
-
-                {/* Desktop Suggestions Sidebar */}
                 <Box
                   sx={{
-                    width: { md: "40%" },
-                    display: { xs: "none", md: "block" },
+                    flex: 1,
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 3,
                   }}
                 >
+                  <Stats
+                    totalRedirections={totalRedirections}
+                    redirections={redirections}
+                  />
                   <RedirectionSuggestions selectedCategory={selectedCategory} />
                 </Box>
               </Box>
-            </Box>
-          </Box>
-        </Container>
+            }
+          />
+          <Route
+            path="/onboarding"
+            element={
+              <OnboardingProvider>
+                <OnboardingFlow />
+              </OnboardingProvider>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Container>
 
-        <Snackbar
-          open={rewardSnackbarOpen}
-          autoHideDuration={4000}
+      {/* Add new impulse button */}
+      <Fab
+        color="primary"
+        aria-label="add"
+        onClick={toggleSettings}
+        sx={{
+          position: "fixed",
+          bottom: 16,
+          right: 16,
+        }}
+      >
+        <AddIcon />
+      </Fab>
+
+      {/* Settings button */}
+      <Fab
+        size="medium"
+        color="secondary"
+        onClick={toggleSettings}
+        aria-label="settings"
+        sx={{ position: "fixed", bottom: 16, right: 90 }}
+      >
+        <SettingsIcon />
+      </Fab>
+
+      {/* Forms and dialogs */}
+      <ImpulseForm
+        open={settingsOpen}
+        onClose={handleCloseSettings}
+        onAddImpulse={handleAddImpulse}
+      />
+
+      <Settings open={settingsOpen} onClose={handleCloseSettings} />
+
+      <Snackbar
+        open={rewardSnackbarOpen}
+        autoHideDuration={4000}
+        onClose={handleCloseRewardSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
           onClose={handleCloseRewardSnackbar}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          severity="success"
+          variant="filled"
+          sx={{ width: "100%" }}
         >
-          <Alert
-            onClose={handleCloseRewardSnackbar}
-            severity="success"
-            variant="filled"
-            sx={{ width: "100%" }}
-          >
-            {rewardMessage}
-          </Alert>
-        </Snackbar>
-
-        <Settings open={settingsOpen} onClose={handleCloseSettings} />
-      </Box>
-    </>
+          {rewardMessage}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 }
 
 function App() {
   return (
-    <AppProviders>
-      <AppContent />
-    </AppProviders>
+    <Router>
+      <AppProviders>
+        <AppContent />
+      </AppProviders>
+    </Router>
   );
 }
 
