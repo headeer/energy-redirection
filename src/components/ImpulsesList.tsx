@@ -7,10 +7,8 @@ import {
   ListItemText,
   Chip,
   Box,
-  IconButton,
   Rating,
   Divider,
-  Button,
   useTheme,
   Avatar,
   Card,
@@ -20,22 +18,18 @@ import {
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import FlagIcon from "@mui/icons-material/Flag";
-import SaveAltIcon from "@mui/icons-material/SaveAlt";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { ImpulseEntry } from "../types/types";
 import { getTodaysDate } from "../utils/dateUtils";
+import { useTranslation } from "../utils/i18n";
 
 interface ImpulsesListProps {
   impulses: ImpulseEntry[];
-  onCompleteImpulse: (id: string) => void;
 }
 
-const ImpulsesList: React.FC<ImpulsesListProps> = ({
-  impulses,
-  onCompleteImpulse,
-}) => {
+const ImpulsesList: React.FC<ImpulsesListProps> = ({ impulses }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   // Filter today's impulses
   const todaysImpulses = impulses.filter(
@@ -68,22 +62,6 @@ const ImpulsesList: React.FC<ImpulsesListProps> = ({
     }
   };
 
-  const handleSave = (result: string) => {
-    // In a real app, this would save to notes or somewhere else
-    const text = `Impuls result: ${result}`;
-
-    // Create a blob and download it
-    const blob = new Blob([text], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `impuls-${new Date().toISOString().slice(0, 10)}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <Paper
       elevation={3}
@@ -103,7 +81,7 @@ const ImpulsesList: React.FC<ImpulsesListProps> = ({
       >
         <FlagIcon sx={{ mr: 1 }} />
         <Typography variant="h6">
-          Dzisiejsze impulsy ({todaysImpulses.length})
+          {t("todayImpulses", { count: todaysImpulses.length })}
         </Typography>
       </Box>
 
@@ -116,7 +94,7 @@ const ImpulsesList: React.FC<ImpulsesListProps> = ({
           }}
         >
           <Typography variant="body1" color="text.secondary">
-            Brak impulsów na dzisiaj. Dodaj swój pierwszy impuls!
+            {t("noImpulsesToday")}
           </Typography>
         </Box>
       ) : (
@@ -133,10 +111,12 @@ const ImpulsesList: React.FC<ImpulsesListProps> = ({
                   mb: index === todaysImpulses.length - 1 ? 2 : 2,
                   position: "relative",
                   borderLeft: `4px solid ${categoryColor}`,
-                  transition: "all 0.2s",
+                  transition: "all 0.3s",
+                  borderRadius: 2,
+                  overflow: "hidden",
                   "&:hover": {
-                    boxShadow: `0 4px 20px 0 ${alpha(categoryColor, 0.2)}`,
-                    transform: "translateY(-2px)",
+                    boxShadow: `0 8px 24px 0 ${alpha(categoryColor, 0.25)}`,
+                    transform: "translateY(-3px)",
                   },
                   ...(impulse.completed && {
                     opacity: 0.85,
@@ -145,6 +125,15 @@ const ImpulsesList: React.FC<ImpulsesListProps> = ({
                   ...(impulse.redirected === false && {
                     borderLeft: `4px solid ${theme.palette.warning.main}`,
                   }),
+                  background: impulse.redirected
+                    ? `linear-gradient(to right, ${alpha(
+                        categoryColor,
+                        0.05
+                      )}, ${alpha(theme.palette.background.paper, 1)} 30%)`
+                    : `linear-gradient(to right, ${alpha(
+                        theme.palette.warning.main,
+                        0.05
+                      )}, ${alpha(theme.palette.background.paper, 1)} 30%)`,
                 }}
                 elevation={impulse.completed ? 1 : 3}
               >
@@ -158,6 +147,10 @@ const ImpulsesList: React.FC<ImpulsesListProps> = ({
                       borderRadius: "50%",
                       p: 0.5,
                       display: "flex",
+                      boxShadow: `0 2px 8px 0 ${alpha(
+                        theme.palette.success.main,
+                        0.4
+                      )}`,
                     }}
                   >
                     <CheckCircleIcon fontSize="small" sx={{ color: "white" }} />
@@ -171,9 +164,15 @@ const ImpulsesList: React.FC<ImpulsesListProps> = ({
                         bgcolor: impulse.redirected
                           ? categoryColor
                           : theme.palette.warning.main,
-                        width: 36,
-                        height: 36,
+                        width: 42,
+                        height: 42,
                         mr: 2,
+                        boxShadow: `0 4px 12px 0 ${alpha(
+                          impulse.redirected
+                            ? categoryColor
+                            : theme.palette.warning.main,
+                          0.25
+                        )}`,
                       }}
                     >
                       {impulse.redirected ? (
@@ -184,7 +183,9 @@ const ImpulsesList: React.FC<ImpulsesListProps> = ({
                     </Avatar>
                     <Box sx={{ flex: 1 }}>
                       <Typography variant="subtitle1" fontWeight="medium">
-                        Impuls #{impulse.redirectionCount}
+                        {t("impulseNumber", {
+                          number: impulse.redirectionCount,
+                        })}
                       </Typography>
                       <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                         <Chip
@@ -194,23 +195,28 @@ const ImpulsesList: React.FC<ImpulsesListProps> = ({
                             bgcolor: alpha(categoryColor, 0.1),
                             color: categoryColor,
                             fontWeight: "medium",
+                            borderRadius: "4px",
                           }}
                         />
                         <Chip
                           label={
                             impulse.redirected
-                              ? "Przekierowany"
-                              : "Nieprzekierowany"
+                              ? t("filterRedirected")
+                              : t("filterNotRedirected")
                           }
                           size="small"
                           sx={{
-                            bgcolor: impulse.redirected
-                              ? alpha(theme.palette.success.main, 0.1)
-                              : alpha(theme.palette.warning.main, 0.1),
+                            bgcolor: alpha(
+                              impulse.redirected
+                                ? theme.palette.success.main
+                                : theme.palette.warning.main,
+                              0.1
+                            ),
                             color: impulse.redirected
                               ? theme.palette.success.main
                               : theme.palette.warning.main,
                             fontWeight: "medium",
+                            borderRadius: "4px",
                           }}
                         />
                       </Box>
@@ -256,35 +262,6 @@ const ImpulsesList: React.FC<ImpulsesListProps> = ({
                     >
                       {impulse.result}
                     </Typography>
-                  </Box>
-
-                  <Box
-                    sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}
-                  >
-                    <Tooltip title="Zapisz notatkę">
-                      <Button
-                        size="small"
-                        startIcon={<SaveAltIcon />}
-                        onClick={() => handleSave(impulse.result)}
-                        sx={{ mr: 1 }}
-                      >
-                        Zapisz
-                      </Button>
-                    </Tooltip>
-
-                    {!impulse.completed && (
-                      <Tooltip title="Oznacz jako zakończone">
-                        <Button
-                          size="small"
-                          variant="contained"
-                          color="success"
-                          startIcon={<CheckCircleOutlineIcon />}
-                          onClick={() => onCompleteImpulse(impulse.id)}
-                        >
-                          Zakończ
-                        </Button>
-                      </Tooltip>
-                    )}
                   </Box>
                 </CardContent>
               </Card>

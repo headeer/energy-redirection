@@ -16,40 +16,72 @@ export const createAppTheme = (
   // Get the correct locale
   const locale = language === "pl" ? plPL : enUS;
 
+  // Logo colors
+  const purpleColor = "#6a0dad";
+  const lightPurple = "#9c27b0";
+  const lightBlue = "#00d4ff";
+  const darkBlue = "#0288d1";
+
+  // Updated color palette based on logo colors (purple to blue gradient)
+  const palette = {
+    primary: {
+      main: purpleColor,
+      dark: "#4a0080",
+      light: lightPurple,
+      ...(mode === "dark" && {
+        main: lightPurple,
+      }),
+      contrastText: "#ffffff",
+    },
+    secondary: {
+      main: lightBlue,
+      light: "#62ebff",
+      dark: darkBlue,
+      contrastText: "#ffffff",
+    },
+    success: {
+      main: "#4caf50", // Green
+      light: "#80e27e",
+      dark: "#087f23",
+      contrastText: "#ffffff",
+    },
+    info: {
+      main: lightBlue, // Using logo blue
+      light: "#62ebff",
+      dark: darkBlue,
+      contrastText: "#ffffff",
+    },
+    warning: {
+      main: "#ffb74d", // Amber
+      light: "#ffe97d",
+      dark: "#c88719",
+      contrastText: "#ffffff",
+    },
+    error: {
+      main: "#f44336", // Red
+      light: "#ff7961",
+      dark: "#ba000d",
+      contrastText: "#ffffff",
+    },
+    background: {
+      default: isLight ? "#f8f9fb" : "#121212",
+      paper: isLight ? "#ffffff" : "#1e1e1e",
+    },
+    text: {
+      primary: isLight ? "#2d3436" : "#f0f0f0",
+      secondary: isLight ? "#636e72" : "#b2bec3",
+    },
+    divider: isLight ? "rgba(0, 0, 0, 0.08)" : "rgba(255, 255, 255, 0.08)",
+  };
+
   return createTheme(
     {
       palette: {
         mode,
-        primary: {
-          main: "#5C6BC0",
-          light: "#8E99F3",
-          dark: "#26418F",
-          contrastText: "#ffffff",
-        },
-        secondary: {
-          main: "#EC407A",
-          light: "#FF77A9",
-          dark: "#B4004E",
-          contrastText: "#ffffff",
-        },
-        success: {
-          main: "#66BB6A",
-          light: "#98EE99",
-          dark: "#338A3E",
-          contrastText: "#ffffff",
-        },
-        background: {
-          default: isLight ? "#f5f7fa" : "#121212",
-          paper: isLight ? "#ffffff" : "#1e1e1e",
-        },
-        text: {
-          primary: isLight ? "#263238" : "#e0e0e0",
-          secondary: isLight ? "#546E7A" : "#aaaaaa",
-        },
-        divider: isLight ? "rgba(0, 0, 0, 0.08)" : "rgba(255, 255, 255, 0.08)",
+        ...palette,
       },
       typography: {
-        fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+        fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
         h4: {
           fontWeight: 700,
           letterSpacing: "-0.5px",
@@ -79,34 +111,37 @@ export const createAppTheme = (
         },
       },
       shape: {
-        borderRadius: 12,
+        borderRadius: 16,
       },
       components: {
         MuiAppBar: {
           styleOverrides: {
             root: {
               boxShadow: isLight
-                ? "0 1px 3px 0 rgba(0, 0, 0, 0.1)"
-                : "0 1px 3px 0 rgba(0, 0, 0, 0.5)",
-              backdropFilter: "blur(8px)",
+                ? "0 2px 10px 0 rgba(106, 13, 173, 0.15)"
+                : "0 2px 10px 0 rgba(0, 0, 0, 0.5)",
+              backdropFilter: "blur(10px)",
               borderRadius: 0,
-              backgroundColor: isLight
-                ? "rgba(92, 107, 192, 0.95)"
-                : "rgba(38, 65, 143, 0.95)",
+              background: `linear-gradient(135deg, ${purpleColor} 0%, ${lightBlue} 100%)`,
             },
           },
         },
         MuiButton: {
           styleOverrides: {
             root: {
-              borderRadius: 8,
+              borderRadius: 12,
               textTransform: "none",
               fontWeight: 600,
               boxShadow: "none",
+              transition: "all 0.2s ease-in-out",
               "&:hover": {
+                transform: "translateY(-2px)",
                 boxShadow: isLight
-                  ? "0 4px 12px 0 rgba(0, 0, 0, 0.08)"
-                  : "0 4px 12px 0 rgba(0, 0, 0, 0.25)",
+                  ? "0 6px 16px 0 rgba(106, 13, 173, 0.25)"
+                  : "0 6px 16px 0 rgba(0, 0, 0, 0.3)",
+              },
+              "&:active": {
+                transform: "translateY(0)",
               },
             },
             sizeSmall: {
@@ -119,20 +154,22 @@ export const createAppTheme = (
               padding: "10px 24px",
             },
             containedPrimary: {
+              background: `linear-gradient(135deg, ${purpleColor} 0%, ${lightPurple} 100%)`,
               "&:hover": {
-                backgroundColor: "#4757b8",
+                background: `linear-gradient(135deg, ${purpleColor} 10%, ${lightPurple} 90%)`,
               },
             },
             containedSecondary: {
+              background: `linear-gradient(135deg, ${darkBlue} 0%, ${lightBlue} 100%)`,
               "&:hover": {
-                backgroundColor: "#d62e6a",
+                background: `linear-gradient(135deg, ${darkBlue} 10%, ${lightBlue} 90%)`,
               },
             },
             outlinedPrimary: {
-              borderColor: "rgba(92, 107, 192, 0.5)",
+              borderColor: `rgba(106, 13, 173, 0.5)`,
               "&:hover": {
-                borderColor: "#5C6BC0",
-                backgroundColor: "rgba(92, 107, 192, 0.04)",
+                borderColor: purpleColor,
+                backgroundColor: "rgba(106, 13, 173, 0.04)",
               },
             },
           },
@@ -140,29 +177,44 @@ export const createAppTheme = (
         MuiPaper: {
           styleOverrides: {
             root: {
-              borderRadius: 12,
+              borderRadius: 16,
               background: isLight ? "#ffffff" : "#1e1e1e",
+              transition:
+                "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+              "&:hover": {
+                boxShadow: isLight
+                  ? "0 4px 20px 0 rgba(106, 13, 173, 0.15)"
+                  : "0 4px 20px 0 rgba(0, 0, 0, 0.3)",
+              },
             },
             elevation1: {
               boxShadow: isLight
-                ? "0 1px 3px 0 rgba(0, 0, 0, 0.1)"
-                : "0 1px 3px 0 rgba(0, 0, 0, 0.3)",
+                ? "0 2px 10px 0 rgba(106, 13, 173, 0.1)"
+                : "0 2px 10px 0 rgba(0, 0, 0, 0.3)",
             },
             elevation3: {
               boxShadow: isLight
-                ? "0 3px 8px 0 rgba(0, 0, 0, 0.1)"
-                : "0 3px 8px 0 rgba(0, 0, 0, 0.3)",
+                ? "0 4px 20px 0 rgba(106, 13, 173, 0.15)"
+                : "0 4px 20px 0 rgba(0, 0, 0, 0.3)",
             },
           },
         },
         MuiCard: {
           styleOverrides: {
             root: {
-              borderRadius: 12,
+              borderRadius: 16,
               boxShadow: isLight
-                ? "0 2px 4px 0 rgba(0, 0, 0, 0.1)"
-                : "0 2px 4px 0 rgba(0, 0, 0, 0.3)",
+                ? "0 3px 15px 0 rgba(106, 13, 173, 0.1)"
+                : "0 3px 15px 0 rgba(0, 0, 0, 0.3)",
               overflow: "hidden",
+              transition:
+                "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+              "&:hover": {
+                transform: "translateY(-4px)",
+                boxShadow: isLight
+                  ? "0 8px 25px 0 rgba(106, 13, 173, 0.2)"
+                  : "0 8px 25px 0 rgba(0, 0, 0, 0.4)",
+              },
             },
           },
         },

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import {
   AppBar,
   Toolbar,
@@ -7,12 +7,58 @@ import {
   Container,
   useTheme,
   alpha,
+  SvgIcon,
 } from "@mui/material";
 import { formatDisplayDate } from "../utils/dateUtils";
-import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
+import { useTranslation } from "../utils/i18n";
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  children?: ReactNode;
+}
+
+const NeuroPulseLogo = (props: any) => (
+  <SvgIcon viewBox="0 0 200 200" {...props}>
+    <defs>
+      <linearGradient id="neuroPulseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#6a0dad" stopOpacity={1} />
+        <stop offset="100%" stopColor="#00d4ff" stopOpacity={1} />
+      </linearGradient>
+    </defs>
+
+    {/* Background Circle */}
+    <circle
+      cx="100"
+      cy="100"
+      r="90"
+      stroke="url(#neuroPulseGrad)"
+      strokeWidth="5"
+      fill="none"
+    />
+
+    {/* Pulse Waveform */}
+    <polyline
+      points="40,120 70,90 90,130 110,70 130,110 160,80"
+      stroke="url(#neuroPulseGrad)"
+      strokeWidth="5"
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+
+    {/* Brain Shape (Stylized) */}
+    <path
+      d="M60 80 Q80 40, 100 60 Q120 40, 140 80"
+      stroke="url(#neuroPulseGrad)"
+      strokeWidth="5"
+      fill="none"
+      strokeLinecap="round"
+    />
+  </SvgIcon>
+);
+
+const Header: React.FC<HeaderProps> = ({ children }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   return (
     <AppBar
@@ -41,42 +87,85 @@ const Header: React.FC = () => {
                 mb: { xs: 0.5, sm: 0 },
               }}
             >
-              <ElectricBoltIcon
+              <Box
                 sx={{
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   mr: 1.5,
-                  fontSize: { xs: 24, sm: 32 },
-                  color: alpha(theme.palette.common.white, 0.9),
                 }}
-              />
+              >
+                <NeuroPulseLogo
+                  sx={{
+                    fontSize: { xs: 40, sm: 48 },
+                    animation: "pulse 2s infinite",
+                    "@keyframes pulse": {
+                      "0%": {
+                        transform: "scale(1)",
+                        opacity: 1,
+                      },
+                      "50%": {
+                        transform: "scale(1.1)",
+                        opacity: 0.9,
+                      },
+                      "100%": {
+                        transform: "scale(1)",
+                        opacity: 1,
+                      },
+                    },
+                  }}
+                />
+              </Box>
               <Typography
                 variant="h5"
                 component="div"
                 sx={{
                   fontWeight: 700,
-                  fontSize: { xs: "1.1rem", sm: "1.3rem" },
+                  fontSize: { xs: "1.2rem", sm: "1.5rem" },
                   letterSpacing: "-0.5px",
-                  color: alpha(theme.palette.common.white, 0.95),
                   textShadow: `0 2px 10px ${alpha(
                     theme.palette.common.black,
                     0.2
                   )}`,
+                  background: `linear-gradient(45deg, #6a0dad 0%, #ffffff 50%, #00d4ff 100%)`,
+                  backgroundSize: "200% auto",
+                  backgroundClip: "text",
+                  textFillColor: "transparent",
+                  animation: "shine 3s linear infinite",
+                  "@keyframes shine": {
+                    "0%": {
+                      backgroundPosition: "0% center",
+                    },
+                    "100%": {
+                      backgroundPosition: "200% center",
+                    },
+                  },
                 }}
               >
-                Rytuał Przekierowania Energii
+                NeuroPulse
               </Typography>
             </Box>
 
-            <Typography
-              variant="subtitle1"
+            <Box
               sx={{
-                color: alpha(theme.palette.common.white, 0.85),
-                fontWeight: 500,
-                fontSize: { xs: "0.875rem", sm: "1rem" },
+                display: "flex",
+                alignItems: "center",
                 ml: { xs: 0, sm: "auto" },
               }}
             >
-              {formatDisplayDate()}
-            </Typography>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  color: alpha(theme.palette.common.white, 0.85),
+                  fontWeight: 500,
+                  fontSize: { xs: "0.875rem", sm: "1rem" },
+                }}
+              >
+                {formatDisplayDate()}
+              </Typography>
+              {children}
+            </Box>
           </Box>
         </Toolbar>
       </Container>

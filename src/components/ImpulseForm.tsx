@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   TextField,
@@ -15,31 +15,48 @@ import {
   alpha,
   Stack,
   Tooltip,
-  Checkbox,
-  FormControlLabel,
+  FormHelperText,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import { ImpulseEntry } from "../types/types";
 import { getTodaysDate } from "../utils/dateUtils";
 import { v4 as uuidv4 } from "uuid";
+import { useTranslation } from "../utils/i18n";
+import AnimatedCheckbox from "./AnimatedCheckbox";
 
 interface ImpulseFormProps {
   onAddImpulse: (impulse: ImpulseEntry) => void;
   todaysCount: number;
+  onCategoryChange?: (
+    category: "Poszukiwacz" | "Kochanek" | "Zdobywca"
+  ) => void;
 }
 
 const ImpulseForm: React.FC<ImpulseFormProps> = ({
   onAddImpulse,
   todaysCount,
+  onCategoryChange,
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [strength, setStrength] = useState<number>(5);
+  const [name, setName] = useState<string>("");
   const [result, setResult] = useState<string>("");
   const [redirected, setRedirected] = useState<boolean>(true);
   const [category, setCategory] = useState<
     "Poszukiwacz" | "Kochanek" | "Zdobywca"
   >("Poszukiwacz");
+
+  // Dark green color
+  const darkGreen = "#2e7d32";
+
+  // Notify parent component when category changes
+  useEffect(() => {
+    if (onCategoryChange) {
+      onCategoryChange(category);
+    }
+  }, [category, onCategoryChange]);
 
   const handleCategoryChange = (event: SelectChangeEvent) => {
     setCategory(event.target.value as "Poszukiwacz" | "Kochanek" | "Zdobywca");
@@ -49,14 +66,16 @@ const ImpulseForm: React.FC<ImpulseFormProps> = ({
     setStrength(newValue as number);
   };
 
+  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setName(event.target.value);
+  };
+
   const handleResultChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResult(event.target.value);
   };
 
-  const handleRedirectedChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setRedirected(event.target.checked);
+  const handleRedirectedChange = (checked: boolean) => {
+    setRedirected(checked);
   };
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -65,6 +84,7 @@ const ImpulseForm: React.FC<ImpulseFormProps> = ({
     const newImpulse: ImpulseEntry = {
       id: uuidv4(),
       date: getTodaysDate(),
+      name,
       strength,
       redirectionCount: todaysCount + 1,
       result,
@@ -76,6 +96,7 @@ const ImpulseForm: React.FC<ImpulseFormProps> = ({
     onAddImpulse(newImpulse);
 
     // Reset form
+    setName("");
     setStrength(5);
     setResult("");
     setRedirected(true);
@@ -84,13 +105,13 @@ const ImpulseForm: React.FC<ImpulseFormProps> = ({
   const getCategoryColor = () => {
     switch (category) {
       case "Poszukiwacz":
-        return theme.palette.primary;
+        return { main: darkGreen, dark: "#1b5e20" };
       case "Kochanek":
         return theme.palette.secondary;
       case "Zdobywca":
         return theme.palette.success;
       default:
-        return theme.palette.primary;
+        return { main: darkGreen, dark: "#1b5e20" };
     }
   };
 
@@ -103,6 +124,7 @@ const ImpulseForm: React.FC<ImpulseFormProps> = ({
         mb: 3,
         overflow: "hidden",
         borderRadius: 2,
+        transition: "all 0.3s ease",
       }}
     >
       <Box
@@ -115,15 +137,25 @@ const ImpulseForm: React.FC<ImpulseFormProps> = ({
         }}
       >
         <FlashOnIcon sx={{ mr: 1 }} />
-        <Typography variant="h6">Zapisz nowy impuls</Typography>
+        <Typography variant="h6">{t("newImpulse")}</Typography>
       </Box>
 
       <Box sx={{ p: 3 }}>
         <form onSubmit={handleSubmit}>
           <Stack spacing={3}>
+            <TextField
+              fullWidth
+              id="name"
+              label={t("impulseName")}
+              value={name}
+              onChange={handleNameChange}
+              variant="outlined"
+              placeholder={t("nameYourImpulse")}
+            />
+
             <Box>
               <Typography gutterBottom fontWeight="medium">
-                Siła impulsu: {strength}/10
+                {t("impulseStrength", { strength })}
               </Typography>
               <Slider
                 value={strength}
@@ -151,68 +183,71 @@ const ImpulseForm: React.FC<ImpulseFormProps> = ({
               />
             </Box>
 
-            <FormControl fullWidth>
-              <InputLabel id="category-select-label">Kategoria</InputLabel>
+            <FormControl fullWidth margin="normal">
+              <InputLabel id="category-label">{t("category")}</InputLabel>
               <Select
-                labelId="category-select-label"
-                id="category-select"
+                labelId="category-label"
+                id="category"
                 value={category}
-                label="Kategoria"
                 onChange={handleCategoryChange}
+                required
               >
-                <MenuItem value="Poszukiwacz">
-                  📝 Poszukiwacz - "Iskry Kreatywności" 💡
-                </MenuItem>
-                <MenuItem value="Kochanek">
-                  📝 Kochanek - "Połączenia Serca" ❤️
-                </MenuItem>
-                <MenuItem value="Zdobywca">
-                  📝 Zdobywca - "Szlak Zwycięstw" 🏆
-                </MenuItem>
+                <MenuItem value="Poszukiwacz">{t("categoryExplorer")}</MenuItem>
+                <MenuItem value="Kochanek">{t("categoryLover")}</MenuItem>
+                <MenuItem value="Zdobywca">{t("categoryAchiever")}</MenuItem>
               </Select>
+              <FormHelperText>{t("categoryHelperText")}</FormHelperText>
             </FormControl>
 
             <TextField
               fullWidth
               id="result"
-              label="Rezultat jaki podjąłem"
+              label={t("impulseResult")}
               multiline
               rows={3}
               value={result}
               onChange={handleResultChange}
               variant="outlined"
-              placeholder="Opisz, jakie działanie podjąłeś w odpowiedzi na impuls..."
+              placeholder={t("describeAction")}
             />
 
-            <FormControlLabel
-              control={
-                <Checkbox
+            <Box component="div" sx={{ mb: 2 }}>
+              <Box
+                component="div"
+                sx={{ display: "flex", alignItems: "center" }}
+              >
+                <AnimatedCheckbox
+                  label={t("redirectionToggleTitle")}
                   checked={redirected}
                   onChange={handleRedirectedChange}
-                  color={redirected ? "success" : "default"}
-                  sx={{
-                    "&.Mui-checked": {
-                      color: theme.palette.success.main,
-                    },
-                  }}
+                  size="medium"
                 />
-              }
-              label={
-                <Typography variant="body2" fontWeight="medium">
-                  Udało mi się przekierować energię (tylko wtedy otrzymasz
-                  punkt)
-                </Typography>
-              }
-            />
+              </Box>
+
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  display: "block",
+                  ml: 4,
+                  mt: 0.5,
+                  fontStyle: "italic",
+                }}
+              >
+                {redirected
+                  ? t("redirectionCountedHint")
+                  : t("redirectionNotCountedHint")}
+              </Typography>
+            </Box>
 
             <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-              <Tooltip title="Dodaj nowy impuls">
+              <Tooltip title={t("addImpulse")}>
                 <span>
                   <Button
                     type="submit"
                     variant="contained"
                     startIcon={<AddIcon />}
-                    disabled={!result.trim()}
+                    disabled={!result.trim() || !name.trim()}
                     sx={{
                       bgcolor: categoryColor.main,
                       "&:hover": {
@@ -221,7 +256,7 @@ const ImpulseForm: React.FC<ImpulseFormProps> = ({
                       px: 3,
                     }}
                   >
-                    Dodaj impuls
+                    {t("saveButton")}
                   </Button>
                 </span>
               </Tooltip>
