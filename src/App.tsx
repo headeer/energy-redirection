@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
 import {
   Container,
-  CssBaseline,
-  ThemeProvider,
   Box,
-  useTheme,
   Tab,
   Tabs,
   Snackbar,
   Alert,
+  IconButton,
 } from "@mui/material";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { ImpulseEntry } from "./types/types";
 import Header from "./components/Header";
 import ImpulseForm from "./components/ImpulseForm";
@@ -17,7 +16,8 @@ import ImpulsesList from "./components/ImpulsesList";
 import Stats from "./components/Stats";
 import RedirectionSuggestions from "./components/RedirectionSuggestions";
 import SuccessDialog from "./components/SuccessDialog";
-import theme from "./theme";
+import { Settings } from "./components/Settings";
+import { AppProviders } from "./providers/AppProviders";
 import {
   loadRedirections,
   getTotalRedirections,
@@ -25,15 +25,17 @@ import {
   updateRedirection,
 } from "./utils/storage";
 import { getTodaysDate } from "./utils/dateUtils";
+import { useTranslation } from "./utils/i18n";
 
-function App() {
+function AppContent() {
+  const { t } = useTranslation();
   const [redirections, setRedirections] = useState<ImpulseEntry[]>([]);
   const [totalRedirections, setTotalRedirections] = useState<number>(0);
   const [successDialogOpen, setSuccessDialogOpen] = useState<boolean>(false);
   const [rewardSnackbarOpen, setRewardSnackbarOpen] = useState<boolean>(false);
   const [rewardMessage, setRewardMessage] = useState<string>("");
   const [tabValue, setTabValue] = useState<number>(0);
-  const appTheme = useTheme();
+  const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
 
   // Load data from local storage on component mount
   useEffect(() => {
@@ -82,21 +84,21 @@ function App() {
     switch (rewardType) {
       case "small":
         pointsToSubtract = 5;
-        rewardText = "Mała nagroda (5 punktów)";
+        rewardText = t("rewards");
         break;
       case "medium":
         pointsToSubtract = 25;
-        rewardText = "Średnia nagroda (25 punktów)";
+        rewardText = t("rewards");
         break;
       case "large":
         pointsToSubtract = 100;
-        rewardText = "Duża nagroda (100 punktów)";
+        rewardText = t("rewards");
         break;
     }
 
     if (totalRedirections >= pointsToSubtract) {
       setTotalRedirections((prev) => prev - pointsToSubtract);
-      setRewardMessage(`Odebrano: ${rewardText}! 🎉`);
+      setRewardMessage(`${t("claimed")}: ${rewardText}! 🎉`);
       setRewardSnackbarOpen(true);
     }
   };
@@ -116,10 +118,29 @@ function App() {
     setTabValue(newValue);
   };
 
+  // Settings handlers
+  const toggleSettings = () => {
+    setSettingsOpen(!settingsOpen);
+  };
+
+  const handleCloseSettings = () => {
+    setSettingsOpen(false);
+  };
+
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Header />
+    <>
+      <Header>
+        <IconButton
+          color="inherit"
+          edge="end"
+          onClick={toggleSettings}
+          aria-label="settings"
+          sx={{ ml: 1 }}
+        >
+          <SettingsIcon />
+        </IconButton>
+      </Header>
+
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box
           sx={{
@@ -143,8 +164,8 @@ function App() {
                 variant="fullWidth"
                 aria-label="content tabs"
               >
-                <Tab label="Formularz" />
-                <Tab label="Podpowiedzi" />
+                <Tab label={t("form")} />
+                <Tab label={t("suggestions")} />
               </Tabs>
               <Box sx={{ mt: 2, display: tabValue === 1 ? "block" : "none" }}>
                 <RedirectionSuggestions />
@@ -207,7 +228,17 @@ function App() {
           {rewardMessage}
         </Alert>
       </Snackbar>
-    </ThemeProvider>
+
+      <Settings open={settingsOpen} onClose={handleCloseSettings} />
+    </>
+  );
+}
+
+function App() {
+  return (
+    <AppProviders>
+      <AppContent />
+    </AppProviders>
   );
 }
 

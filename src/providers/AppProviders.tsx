@@ -2,7 +2,13 @@ import React, { useState, useEffect, useMemo, ReactNode } from "react";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeMode, ThemeContext, createAppTheme } from "../utils/theme";
-import { LanguageContext, Language, defaultLanguage } from "../utils/i18n";
+import {
+  LanguageContext,
+  Language,
+  defaultLanguage,
+  translateWithVars,
+  TranslationKey,
+} from "../utils/i18n";
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -77,6 +83,8 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
         setLanguage(newLanguage);
         localStorage.setItem("language", newLanguage);
       },
+      t: (key: TranslationKey, variables?: Record<string, string | number>) =>
+        translateWithVars(key, language, variables),
     }),
     [language]
   );
