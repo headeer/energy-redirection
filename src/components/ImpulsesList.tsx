@@ -22,9 +22,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { ImpulseEntry } from "../types/types";
 import { getTodaysDate } from "../utils/dateUtils";
 import { useTranslation } from "../utils/i18n";
-import { initializeApp } from "firebase/app";
-import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
-import { connectFirestoreEmulator } from "firebase/firestore";
+import { db } from "../firebase/config";
 
 interface ImpulsesListProps {
   redirections: ImpulseEntry[];
@@ -33,9 +31,6 @@ interface ImpulsesListProps {
 const ImpulsesList: React.FC<ImpulsesListProps> = ({ redirections }) => {
   const theme = useTheme();
   const { t } = useTranslation();
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app); // Use default database
 
   // Filter today's impulses
   const todaysImpulses = redirections.filter(
@@ -67,10 +62,6 @@ const ImpulsesList: React.FC<ImpulsesListProps> = ({ redirections }) => {
         return theme.palette.primary.main;
     }
   };
-
-  enableIndexedDbPersistence(db).catch((err) => {
-    console.error("Firebase persistence error:", err);
-  });
 
   return (
     <Paper
