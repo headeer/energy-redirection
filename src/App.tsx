@@ -26,8 +26,6 @@ import ImpulsesList from "./components/ImpulsesList";
 import Stats from "./components/Stats";
 import RedirectionSuggestions from "./components/RedirectionSuggestions";
 import { Settings } from "./components/Settings";
-import LoginForm from "./components/auth/LoginForm";
-import RegisterForm from "./components/auth/RegisterForm";
 import OnboardingFlow from "./components/onboarding/OnboardingFlow";
 import { AppProviders } from "./providers/AppProviders";
 import {
@@ -40,23 +38,10 @@ import { getTodaysDate } from "./utils/dateUtils";
 import { useTranslation } from "./utils/i18n";
 import { useTheme } from "@mui/material/styles";
 import { alpha } from "@mui/material/styles";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
-
-// Private Route component
-const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, status } = useAuth();
-
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
-
-  return user ? <>{children}</> : <Navigate to="/login" />;
-};
 
 function AppContent() {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const [redirections, setRedirections] = useState<ImpulseEntry[]>([]);
   const [totalRedirections, setTotalRedirections] = useState<number>(0);
   const [rewardSnackbarOpen, setRewardSnackbarOpen] = useState<boolean>(false);
@@ -70,24 +55,20 @@ function AppContent() {
 
   // Load data from local storage on component mount
   useEffect(() => {
-    if (!user) return;
-
-    const storedData = loadRedirections(user.uid);
+    const storedData = loadRedirections("default");
     if (storedData) {
       setRedirections(storedData.redirections || []);
       setTotalRedirections(storedData.totalRedirections || 0);
     }
-  }, [user]);
+  }, []);
 
   // Save data to localStorage when it changes
   useEffect(() => {
-    if (!user) return;
-
-    saveRedirections(user.uid, {
+    saveRedirections("default", {
       redirections,
       totalRedirections,
     });
-  }, [redirections, totalRedirections, user]);
+  }, [redirections, totalRedirections]);
 
   // Get today's redirections count
   const getTodaysRedirectionsCount = () => {
@@ -96,9 +77,7 @@ function AppContent() {
 
   // Handle adding a new impulse
   const handleAddImpulse = (impulse: ImpulseEntry) => {
-    if (!user) return;
-
-    const newRedirections = addRedirection(user.uid, impulse);
+    const newRedirections = addRedirection("default", impulse);
     setRedirections(newRedirections);
 
     // Only update total if the impulse was redirected
@@ -156,18 +135,6 @@ function AppContent() {
     setSelectedCategory(category);
   };
 
-  if (!user) {
-    return (
-      <Container maxWidth="sm" sx={{ py: 4 }}>
-        <Routes>
-          <Route path="/login" element={<LoginForm />} />
-          <Route path="/register" element={<RegisterForm />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Container>
-    );
-  }
-
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <Header>
@@ -197,28 +164,31 @@ function AppContent() {
             element={
               <Box
                 sx={{
-                  display: "flex",
-                  flexDirection: { xs: "column", md: "row" },
-                  gap: { xs: 2, md: 3 },
-                  flex: 1,
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", md: "1fr 2fr 1fr" },
+                  gap: 3,
                 }}
               >
-                <Box sx={{ flex: 2, width: "100%" }}>
-                  <ImpulsesList redirections={redirections} />
-                </Box>
-                <Box
-                  sx={{
-                    flex: 1,
-                    width: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 3,
-                  }}
-                >
+                {/* Left Column - Statistics */}
+                <Box>
                   <Stats
                     totalRedirections={totalRedirections}
                     redirections={redirections}
                   />
+                </Box>
+
+                {/* Middle Column - Create Impulse and Today's Impulses */}
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  <ImpulseForm
+                    open={settingsOpen}
+                    onClose={handleCloseSettings}
+                    onAddImpulse={handleAddImpulse}
+                  />
+                  <ImpulsesList redirections={redirections} />
+                </Box>
+
+                {/* Right Column - Redirection Suggestions */}
+                <Box>
                   <RedirectionSuggestions selectedCategory={selectedCategory} />
                 </Box>
               </Box>
@@ -235,38 +205,6 @@ function AppContent() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Container>
-
-      {/* Add new impulse button */}
-      <Fab
-        color="primary"
-        aria-label="add"
-        onClick={toggleSettings}
-        sx={{
-          position: "fixed",
-          bottom: 16,
-          right: 16,
-        }}
-      >
-        <AddIcon />
-      </Fab>
-
-      {/* Settings button */}
-      <Fab
-        size="medium"
-        color="secondary"
-        onClick={toggleSettings}
-        aria-label="settings"
-        sx={{ position: "fixed", bottom: 16, right: 90 }}
-      >
-        <SettingsIcon />
-      </Fab>
-
-      {/* Forms and dialogs */}
-      <ImpulseForm
-        open={settingsOpen}
-        onClose={handleCloseSettings}
-        onAddImpulse={handleAddImpulse}
-      />
 
       <Settings open={settingsOpen} onClose={handleCloseSettings} />
 
