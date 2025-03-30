@@ -146,7 +146,10 @@ export type TranslationKey =
   | "redirectionNotCountedHint"
   | "todayImpulses"
   | "filterRedirected"
-  | "filterNotRedirected";
+  | "filterNotRedirected"
+  | "smallRewardClaimed"
+  | "mediumRewardClaimed"
+  | "largeRewardClaimed";
 
 // Translation maps
 export const translations: Record<Language, Record<TranslationKey, string>> = {
@@ -298,6 +301,9 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     todayImpulses: "Dzisiejsze impulsy ({{count}})",
     filterRedirected: "Przekierowany",
     filterNotRedirected: "Nieprzekierowany",
+    smallRewardClaimed: "Odebrano małą nagrodę! -5 punktów",
+    mediumRewardClaimed: "Odebrano średnią nagrodę! -25 punktów",
+    largeRewardClaimed: "Odebrano dużą nagrodę! -100 punktów",
   },
   en: {
     title: "NeuroPulse",
@@ -446,6 +452,9 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     todayImpulses: "Today's impulses ({{count}})",
     filterRedirected: "Redirected",
     filterNotRedirected: "Not redirected",
+    smallRewardClaimed: "Small reward claimed! -5 points",
+    mediumRewardClaimed: "Medium reward claimed! -25 points",
+    largeRewardClaimed: "Large reward claimed! -100 points",
   },
 };
 

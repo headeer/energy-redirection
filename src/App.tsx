@@ -29,10 +29,12 @@ import { Settings } from "./components/Settings";
 import OnboardingFlow from "./components/onboarding/OnboardingFlow";
 import { AppProviders } from "./providers/AppProviders";
 import {
-  loadRedirections,
+  loadAppData,
   getTotalRedirections,
   addRedirection,
-  saveRedirections,
+  saveAppData,
+  updateRewardSettings,
+  updateSelectedCategory,
 } from "./utils/storage";
 import { getTodaysDate } from "./utils/dateUtils";
 import { useTranslation } from "./utils/i18n";
@@ -53,22 +55,39 @@ function AppContent() {
   >("Poszukiwacz");
   const theme = useTheme();
 
-  // Load data from local storage on component mount
+  // Load all app data from local storage on component mount
   useEffect(() => {
-    const storedData = loadRedirections("default");
-    if (storedData) {
-      setRedirections(storedData.redirections || []);
-      setTotalRedirections(storedData.totalRedirections || 0);
-    }
+    const appData = loadAppData("default");
+    setRedirections(appData.redirections || []);
+    setTotalRedirections(appData.totalRedirections || 0);
+    setSelectedCategory(appData.selectedCategory || "Poszukiwacz");
   }, []);
 
-  // Save data to localStorage when it changes
+  // Save all app data to localStorage when it changes
   useEffect(() => {
-    saveRedirections("default", {
+    saveAppData("default", {
       redirections,
       totalRedirections,
+      selectedCategory,
+      rewardSettings: {
+        small: {
+          title: "Small reward",
+          description: "5 redirections",
+          threshold: 5,
+        },
+        medium: {
+          title: "Medium reward",
+          description: "25 redirections",
+          threshold: 25,
+        },
+        large: {
+          title: "Large reward",
+          description: "100 redirections",
+          threshold: 100,
+        },
+      },
     });
-  }, [redirections, totalRedirections]);
+  }, [redirections, totalRedirections, selectedCategory]);
 
   // Get today's redirections count
   const getTodaysRedirectionsCount = () => {
@@ -89,24 +108,29 @@ function AppContent() {
   // Handle claiming a reward
   const handleClaimReward = (rewardType: RewardType) => {
     let rewardText = "";
+    let pointsToDeduct = 0;
 
     switch (rewardType) {
       case "small":
-        setTotalRedirections((prev) => Math.max(0, prev - 5));
+        pointsToDeduct = 5;
         rewardText = t("smallReward");
         break;
       case "medium":
-        setTotalRedirections((prev) => Math.max(0, prev - 25));
+        pointsToDeduct = 25;
         rewardText = t("mediumReward");
         break;
       case "large":
-        setTotalRedirections((prev) => Math.max(0, prev - 100));
+        pointsToDeduct = 100;
         rewardText = t("largeReward");
         break;
     }
 
-    setRewardMessage(rewardText);
-    setRewardSnackbarOpen(true);
+    // Only deduct if we have enough points
+    if (totalRedirections >= pointsToDeduct) {
+      setTotalRedirections((prev) => prev - pointsToDeduct);
+      setRewardMessage(rewardText);
+      setRewardSnackbarOpen(true);
+    }
   };
 
   // Handle closing the reward snackbar
@@ -133,6 +157,7 @@ function AppContent() {
     category: "Poszukiwacz" | "Kochanek" | "Zdobywca"
   ) => {
     setSelectedCategory(category);
+    updateSelectedCategory("default", category);
   };
 
   return (

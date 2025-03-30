@@ -9,6 +9,8 @@ import {
   Button,
   Tooltip,
   IconButton,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
@@ -19,6 +21,8 @@ import EditIcon from "@mui/icons-material/Edit";
 import { useTranslation } from "../utils/i18n";
 import { RewardSettings, RewardType, ImpulseEntry } from "../types/types";
 import EditRewardsDialog from "./EditRewardsDialog";
+import Fireworks from "./Fireworks";
+import { loadAppData, updateRewardSettings } from "../utils/storage";
 
 interface StatsProps {
   totalRedirections: number;
@@ -56,6 +60,9 @@ const Stats: React.FC<StatsProps> = ({
   const [rewardSettings, setRewardSettings] = useState<RewardSettings>(
     defaultRewardSettings
   );
+  const [showFireworks, setShowFireworks] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Dark green color
   const darkGreen = "#2e7d32";
@@ -63,14 +70,9 @@ const Stats: React.FC<StatsProps> = ({
 
   // Load saved reward settings from localStorage on mount
   useEffect(() => {
-    const savedSettings = localStorage.getItem("rewardSettings");
-    if (savedSettings) {
-      try {
-        const parsedSettings = JSON.parse(savedSettings);
-        setRewardSettings(parsedSettings);
-      } catch (e) {
-        console.error("Failed to parse saved reward settings:", e);
-      }
+    const appData = loadAppData("default");
+    if (appData.rewardSettings) {
+      setRewardSettings(appData.rewardSettings);
     }
   }, []);
 
@@ -97,10 +99,22 @@ const Stats: React.FC<StatsProps> = ({
 
   const handleRewardClick = (rewardType: RewardType) => {
     if (
-      (rewardType === "small" && smallRewardAchieved) ||
-      (rewardType === "medium" && mediumRewardAchieved) ||
-      (rewardType === "large" && largeRewardAchieved)
+      (rewardType === "small" &&
+        totalRedirections >= rewardSettings.small.threshold) ||
+      (rewardType === "medium" &&
+        totalRedirections >= rewardSettings.medium.threshold) ||
+      (rewardType === "large" &&
+        totalRedirections >= rewardSettings.large.threshold)
     ) {
+      // Show fireworks
+      setShowFireworks(true);
+      setTimeout(() => setShowFireworks(false), 3000);
+
+      // Show success message
+      setSuccessMessage(t(`${rewardType}RewardClaimed`));
+      setShowSuccessMessage(true);
+
+      // Call the reward handler
       onClaimReward?.(rewardType);
     }
   };
@@ -111,7 +125,7 @@ const Stats: React.FC<StatsProps> = ({
 
   const handleSaveRewardSettings = (settings: RewardSettings) => {
     setRewardSettings(settings);
-    localStorage.setItem("rewardSettings", JSON.stringify(settings));
+    updateRewardSettings("default", settings);
   };
 
   const pulseVariants = {
@@ -125,6 +139,7 @@ const Stats: React.FC<StatsProps> = ({
 
   return (
     <>
+      <Fireworks active={showFireworks} />
       <Paper
         elevation={3}
         sx={{
@@ -597,6 +612,22 @@ const Stats: React.FC<StatsProps> = ({
         rewardSettings={rewardSettings}
         onSave={handleSaveRewardSettings}
       />
+
+      <Snackbar
+        open={showSuccessMessage}
+        autoHideDuration={4000}
+        onClose={() => setShowSuccessMessage(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setShowSuccessMessage(false)}
+          severity="success"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {successMessage}
+        </Alert>
+      </Snackbar>
     </>
   );
 };
